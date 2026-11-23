@@ -1,43 +1,67 @@
 brain:
   provider: codex
+  model: gpt-5.5
 
 persona:
-  name: Lic. Martín F. Battaglia
-  company: Logística TOPS (Verotín S.A.)
+  name: Martín F. Battaglia
+  company: Logística TOPS
   role: Presidente y CEO
+  # Referencia institucional: contacto@logisticatops.com. Casilla dedicada pendiente.
   email: sandbox@example.invalid
   linkedin: ""
-  tone: Español rioplatense profesional, consultivo y breve. Usar trato formal o voseo corporativo coherente.
+  tone: Profesional, directo, español rioplatense corporativo, sin exageraciones ni frases cliché de IA.
 
 product:
-  name: Logística tercerizada 3PL
-  description: Operador logístico familiar con más de 45 años en Buenos Aires. Cargas generales y operación para productos farmacéuticos y médicos regulados.
-  pricing: Cotización según volumen, rotación y requisitos operativos.
+  name: Operación Logística 3PL — Cargas Generales y Regulados ANMAT
+  description: >
+    Operador logístico 3PL familiar con más de 45 años de trayectoria continua en Buenos Aires (Verotín S.A.).
+    Dos sedes propias en CABA (Agustín Magaldi 1765 y Pedro Luján 3159) con racks selectivos y drive-in Mecalux,
+    desconsolidación de contenedores, almacenamiento, preparación de pedidos y distribución en un radio de hasta 60 km.
+    Dos líneas operativas: Cargas Generales (disponibilidad inmediata) y Productos Farmacéuticos y Médicos Regulados
+    bajo normativa ANMAT con ambiente controlado de 20 a 26 °C, procesos bajo estándares ISO 9001 e ISO 14001
+    y respaldo de dirección técnica.
+  pricing: >
+    Cargas Generales desde USD 15 por metro cuadrado.
+    Productos Regulados ANMAT con ambiente controlado desde USD 45 por metro cuadrado.
   key_benefits:
-    - Flexibilidad de almacenamiento y trazabilidad digital.
-    - Desconsolidación de contenedores, preparación de pedidos y distribución hasta 60 km de Buenos Aires.
-    - Experiencia en operaciones reguladas y procesos bajo estándares ISO 9001 e ISO 14001.
-  objection_responses: {}
+    - Ubicación estratégica en CABA (Agustín Magaldi 1765 y Pedro Luján 3159) con acceso rápido a puertos y autopistas en un radio de 60 km.
+    - Más de 45 años de trayectoria continua con flexibilidad operativa para absorber picos de stock y desconsolidación de contenedores.
+    - Racks selectivos y drive-in Mecalux con trazabilidad digital de inventario.
+    - Depósito para productos médicos y farmacéuticos regulados por ANMAT con temperatura controlada de 20 a 26 °C.
+  objection_responses:
+    ya_tenemos_deposito_propio: >
+      Entiendo. Muchos clientes mantienen su base propia y usan nuestros módulos en Barracas como pulmón flexible para
+      picos estacionales o desconsolidación de contenedores sin sumar costos fijos.
+    ya_trabajamos_con_otro_3pl: >
+      Tiene sentido. Si en algún momento necesitan respaldo en CABA o un espacio dedicado con ambiente controlado de 20 a 26 °C
+      para líneas médicas o farmacéuticas, podemos cotizar un módulo puntual sin compromiso.
+    necesitamos_habilitacion_anmat: >
+      Operamos bajo normativa sanitaria con temperatura controlada de 20 a 26 °C, trayectoria comprobada con laboratorios
+      y articulación con dirección técnica según el tipo de producto médico o farmacéutico.
   offer:
-    primary: Evaluar el encaje operativo de una solución 3PL.
+    entry: Revisión breve de 10 a 15 minutos para validar encaje operativo y disponibilidad de metros cuadrados.
     goal: get_reply
     booking_method: ask_preference
-    meeting_owner: Lic. Martín F. Battaglia
+    meeting_duration: 15 minutos
+    booking_url: ""
+    meeting_owner: Martín F. Battaglia
 
 icp:
   industries:
-    - distribuidora importadora industrial mayorista
-    - distribuidora de insumos médicos
-    - farmacia
-    - fabricante industrial
-    - laboratorio farmacéutico
-  company_size: PyMEs y empresas medianas con necesidades recurrentes de almacenamiento o distribución.
+    - Importadores y distribuidores mayoristas de cargas generales en AMBA
+    - Fabricantes industriales con necesidad de almacenamiento y distribución en radio de 60 km
+    - Laboratorios farmacéuticos, droguerías e importadores de dispositivos e insumos médicos (ANMAT)
+  company_size: PyMEs medianas y empresas corporativas (15 a 500 empleados)
   titles:
-    - Gerencia de Supply Chain o Logística
-    - Gerencia de Operaciones
-    - Dirección Comercial
-    - Gerencia de Compras
-    - Dueño o socio
+    - Gerente de Supply Chain
+    - Gerente de Logística
+    - Gerente de Operaciones
+    - Director Comercial
+    - Gerente de Compras
+    - Director Técnico
+    - Socio Gerente
+    - Dueño
+  # Centro de descubrimiento. La calificación mide proximidad a ambas sedes.
   geography:
     - Buenos Aires, Argentina
   geo_coordinates:
@@ -46,15 +70,25 @@ icp:
     - logística
     - supply chain
     - depósito
+    - calidad
+    - asuntos regulatorios
+    - comex
+    - comercio exterior
 
 channels:
   email:
     enabled: false
     provider: smtp
+    # Cupo propuesto para producción: 30, sujeto a aprobación expresa.
     max_daily_sends: 0
+    per_inbox_daily_cap: 25
+    max_bounce_rate: 0.03
     require_approval: true
     min_write_score: 60
     send_to_risky: false
+    # Cadencia propuesta para producción: 3 pasos en el mismo hilo, días hábiles
+    # 3 y 6, con corte al responder la empresa. Sellbird 0.4.0 no admite esta
+    # cadencia ni el corte por empresa como opciones YAML.
     link_domains:
       - logisticatops.com
       - cargasgenerales.logisticatops.com
@@ -64,19 +98,31 @@ channels:
       end: "17:00"
       weekdays_only: true
       recipient_timezone: false
+    warmup:
+      start_date: ""
+      min_days: 14
+      start_sends: 5
+      daily_increase: 3
+      dkim_selector: ""
   linkedin:
     enabled: false
 
 usage:
-  max_daily_claude_percent: 20
+  max_daily_claude_percent: 80
+  heartbeat_interval_minutes: 15
   quiet_hours:
-    start: "17:00"
-    end: "09:00"
     timezone: America/Argentina/Buenos_Aires
+    start: "18:30"
+    end: "08:30"
 
 compliance:
-  postal_address: Agustín Magaldi 1765, Buenos Aires, Argentina
-  opt_out_line: Si desea dejar de recibir estos correos, responda «baja» y eliminaremos su dirección de la lista.
+  postal_address: Agustín Magaldi 1765, C1286 CABA, Buenos Aires, Argentina
+  opt_out_line: Si no es de tu interés, respondeme «baja» por acá y no vuelvo a escribirte.
+  precleared:
+    enabled: false
+    sender_country: AR
+    address_source: published
+    prospect_country: AR
   do_not_contact:
     - logisticatops.com
     - leset.com.ar
@@ -100,8 +146,22 @@ compliance:
     - dbschenker.com
     - geodis.com
     - cevalogistics.com
-  precleared:
-    enabled: false
+    - verotin.com.ar
+    - simplificafulfillment.com
+    - tasalogistica.com.ar
+    - logisticalujan.com.ar
+    - logisticabarracas.com.ar
+    - correoargentino.com.ar
+    - pickit.com.ar
+    - hopenvios.com.ar
+    - treggo.com
+    - chazki.com
+    - kreuzer.com.ar
+    - cruzdelzur.com.ar
+    - expresomalargue.com.ar
+    - via-cargo.com.ar
+    - schenker.com
+    - ryder.com
 
 writer:
   email_rules: skills/email_rules.md
