@@ -5,6 +5,9 @@
 !/skills/
 !/prompts/
 !/exports/
+!/scripts/
+/scripts/*
+!/scripts/export_to_nexus_csv.py
 /skills/*
 !/skills/product_knowledge.md
 !/skills/competitive_intel.md
