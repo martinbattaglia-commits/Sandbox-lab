@@ -86,6 +86,7 @@ channels:
     require_approval: true
     min_write_score: 60
     send_to_risky: false
+    follow_ups: true
     # Cadencia propuesta para producción: 3 pasos en el mismo hilo, días hábiles
     # 3 y 6, con corte al responder la empresa. Sellbird 0.4.0 no admite esta
     # cadencia ni el corte por empresa como opciones YAML.
