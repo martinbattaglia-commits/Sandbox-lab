@@ -94,3 +94,9 @@ Ejecutá `venv/bin/python scripts/export_to_nexus_csv.py` para generar los dos C
 - **CRM.** Una fila por empresa con puntaje de 80 a 100, incluso cuando todavía no hay contacto. Se prioriza al decisor identificado y, entre contactos equivalentes, al verificado. Se toma su primer borrador vigente pendiente de revisión o se incluye una plantilla base de la línea. Usá `listo_para_propuesta` para distinguir las filas con decisor y señal activa de contratación, financiación o pauta. `precio_desde_usd_m2` indica el precio base.
 
 El exportador prepara archivos para revisión e importación. El alta en Nexus y la generación de PDF se ejecutan fuera de este script. Los CSV de ejecución quedan ignorados por Git y los dos ejemplos versionados usan exclusivamente datos sintéticos.
+
+## Importación de empresas semilla
+
+Prepará `data/semillas_b2b.csv` con las columnas de [la plantilla de ejemplo](data/semillas_b2b.example.csv). Para excluir clientes activos, usá `data/clientes_activos_exclusion.csv` con una columna `domain` o `website`. Revisá los conteos con `venv/bin/python scripts/import_seed_companies.py --dry-run`. Quitá `--dry-run` para insertar en la base local. Los CSV operativos y SQLite están ignorados por Git.
+
+La importación registra empresas y su origen. El perfilado, la identificación del decisor y el puntaje se completan después con evidencia comercial.

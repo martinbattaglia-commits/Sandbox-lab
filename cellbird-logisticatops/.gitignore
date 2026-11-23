@@ -5,6 +5,9 @@
 !/skills/
 !/prompts/
 !/exports/
+!/data/
+/data/*
+!/data/semillas_b2b.example.csv
 !/out/
 /out/*
 !/out/nexus_marketing_import.example.csv
@@ -12,6 +15,7 @@
 !/scripts/
 /scripts/*
 !/scripts/export_to_nexus_csv.py
+!/scripts/import_seed_companies.py
 !/scripts/lead_qualification.py
 !/scripts/write_qualified_drafts.py
 /skills/*
