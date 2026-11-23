@@ -5,6 +5,10 @@
 !/skills/
 !/prompts/
 !/exports/
+!/out/
+/out/*
+!/out/nexus_marketing_import.example.csv
+!/out/nexus_crm_high_priority.example.csv
 !/scripts/
 /scripts/*
 !/scripts/export_to_nexus_csv.py

@@ -169,6 +169,15 @@ class Qualification:
     reasons: tuple[str, ...]
 
 
+def is_decision_maker(contact):
+    return bool(
+        (contact["first_name"] or "").strip()
+        and (contact["last_name"] or "").strip()
+        and contact["status"] != "lost"
+        and contains(AUTHORITY, normalize(contact["title"]))
+    )
+
+
 def qualify(company, contacts, signals, observations, exclusion=None):
     if exclusion is None and offers_logistics(company):
         exclusion = "Ofrece servicios logísticos a terceros"
@@ -187,13 +196,7 @@ def qualify(company, contacts, signals, observations, exclusion=None):
     near = proximity(company["location"])
     roles = " | ".join(normalize(row["value_text"]) for row in current_roles(observations))
     codes = {signal["signal_code"] for signal in signals}
-    decision_maker = any(
-        (contact["first_name"] or "").strip()
-        and (contact["last_name"] or "").strip()
-        and contact["status"] != "lost"
-        and contains(AUTHORITY, normalize(contact["title"]))
-        for contact in contacts
-    )
+    decision_maker = any(is_decision_maker(contact) for contact in contacts)
     if regulated:
         segment = ANMAT
         checks = (

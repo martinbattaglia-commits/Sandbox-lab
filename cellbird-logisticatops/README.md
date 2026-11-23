@@ -85,3 +85,12 @@ venv/bin/python scripts/write_qualified_drafts.py --dry-run
 ```
 
 Para generar borradores con la clasificación obligatoria, usá `venv/bin/python scripts/write_qualified_drafts.py` con el entorno de Codex configurado como se indica arriba. Este comando ejecuta únicamente el Writer. El heartbeat original de Sellbird usa el puntaje de su Scout y queda fuera del flujo de borradores de TOPS. El Writer local exige envío pausado, cupo cero y revisión manual.
+
+## Carriles de importación en Nexus OS
+
+Ejecutá `venv/bin/python scripts/export_to_nexus_csv.py` para generar los dos CSV en `out/`. El exportador lee SQLite en modo solo lectura y recalcula el encaje según las rúbricas de TOPS.
+
+- **Marketing.** Una fila por contacto verificado en empresas con puntaje de 60 a 79. Aplicá la etiqueta `cold_outreach_sellbird` al importar este archivo en Nexus. Los contactos sin verificar de este rango quedan para enriquecimiento en Sellbird.
+- **CRM.** Una fila por empresa con puntaje de 80 a 100, incluso cuando todavía no hay contacto. Se prioriza al decisor identificado y, entre contactos equivalentes, al verificado. Se toma su primer borrador vigente pendiente de revisión o se incluye una plantilla base de la línea. Usá `listo_para_propuesta` para distinguir las filas con decisor y señal activa de contratación, financiación o pauta. `precio_desde_usd_m2` indica el precio base.
+
+El exportador prepara archivos para revisión e importación. El alta en Nexus y la generación de PDF se ejecutan fuera de este script. Los CSV de ejecución quedan ignorados por Git y los dos ejemplos versionados usan exclusivamente datos sintéticos.

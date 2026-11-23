@@ -1,0 +1,2 @@
+empresa,dominio,linea_negocio,fit_score,contacto_nombre,cargo,email,senales_detectadas,origen_fuente
+Mayorista Ejemplo,mayorista.example.invalid,CARGAS_GENERALES,60,Ana Ejemplo,Gerenta de Logística,ana@mayorista.example.invalid,RUNNING_GOOGLE_ADS,fixture
