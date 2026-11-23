@@ -2,26 +2,22 @@
 """Export Nexus CRM CSV from the local Sellbird 0.4 SQLite schema.
 
 Run with the project venv Python. The database is opened read-only. Company
-fit comes from Sellbird, and the service line is inferred from business text.
+fit and service line use the Logística TOPS qualification rules.
 Companies stay in the file even when all of their contacts are suppressed.
 """
 
 import argparse
-from collections import defaultdict
 from contextlib import closing
 import csv
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-import re
 import sqlite3
 import tempfile
-import unicodedata
 
 from sellbird.config import ConfigError, load_config
-from sellbird.fit import company_fit
-from sellbird.gate import do_not_contact_match
-from sellbird.state import StateManager
+
+from lead_qualification import qualified_companies
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,32 +26,6 @@ COLUMNS = (
     "motivo_seleccion", "contacto_nombre", "contacto_cargo", "email",
     "email_estado", "origen_dato", "fecha_extraccion",
 )
-REGULATED = re.compile(
-    r"\b(?:anmat|farmac\w*|medicament\w*|insumos? medic\w*|"
-    r"productos? medic\w*|dispositivos? medic\w*)\b"
-)
-GENERAL = re.compile(
-    r"\b(?:distribu\w*|importa\w*|fabrica\w*|industria\w*|"
-    r"mayorista\w*|repuestos?|cargas? generales)\b"
-)
-
-
-def service_line(company):
-    text = " ".join(company[key] or "" for key in ("name", "industry", "description"))
-    normalized = unicodedata.normalize("NFKD", text.casefold())
-    normalized = "".join(char for char in normalized if not unicodedata.combining(char))
-    if REGULATED.search(normalized):
-        return "Productos Regulados"
-    if GENERAL.search(normalized):
-        return "Cargas Generales"
-    return "Por clasificar"
-
-
-def rows_by_company(db, sql):
-    grouped = defaultdict(list)
-    for row in db.execute(sql):
-        grouped[row["company_id"]].append(dict(row))
-    return grouped
 
 
 def detected_signals(company, current):
@@ -81,44 +51,17 @@ def detected_signals(company, current):
 
 
 def export_rows(db, config, extracted):
-    companies = db.execute("SELECT * FROM companies ORDER BY name COLLATE NOCASE, id")
-    prospects = rows_by_company(
-        db, "SELECT * FROM prospects ORDER BY score DESC, created_at, id"
-    )
-    fit_evidence = rows_by_company(
-        db, "SELECT * FROM observations WHERE signal_code IN "
-        "('DECISION_MAKER_TITLE', 'CONTACT_FORM_URL', 'HIRING_ROLE')"
-    )
-    # Reuse Sellbird's cohort rules for current positive observations.
-    signals = rows_by_company(db, StateManager._CURRENT_CTE + "SELECT * FROM positive")
-    dnc = list(config.compliance.do_not_contact)
-    suppressed = [row["value"] for row in db.execute(
-        "SELECT value FROM suppressions WHERE kind IN ('domain', 'address')"
-    )]
-    exclusions = dnc + suppressed
-
-    for record in companies:
-        company = dict(record)
-        company_id = company["id"]
+    for company, contacts, signals, rating in qualified_companies(db, config):
         domain = company["domain"] or ""
-        candidates = prospects[company_id]
-        contacts = [
-            contact for contact in candidates
-            if contact["status"] != "opted_out"
-            and not do_not_contact_match(contact["email"] or "", exclusions)
-        ]
-        if domain and do_not_contact_match(f"x@{domain}", exclusions):
-            contacts = []
-        score, reasons = company_fit(company, contacts, fit_evidence[company_id], config, exclusions)
         company_source = company["source"] or ""
         selection = [f"Fuente: {company_source}"] if company_source else []
-        selection.extend(reasons)
+        selection.extend(rating.reasons)
         base = {
             "empresa": company["name"] or domain,
             "sitio_web": company["website"] or (f"https://{domain}" if domain else ""),
-            "linea_servicio": service_line(company),
-            "fit_score": score,
-            "senales_detectadas": detected_signals(company, signals[company_id]),
+            "linea_servicio": rating.segment,
+            "fit_score": rating.score,
+            "senales_detectadas": detected_signals(company, signals),
             "motivo_seleccion": " | ".join(selection),
             "fecha_extraccion": extracted,
         }

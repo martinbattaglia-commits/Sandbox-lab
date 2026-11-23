@@ -53,6 +53,7 @@ channels:
     provider: smtp
     max_daily_sends: 0
     require_approval: true
+    min_write_score: 60
     send_to_risky: false
     link_domains:
       - logisticatops.com

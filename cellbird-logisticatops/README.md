@@ -74,3 +74,14 @@ Antes de una prueba real de Codex, renovar la sesión de ChatGPT con la CLI y ve
 
 - [Documentación oficial de Codex en Sellbird](https://github.com/ethanplusai/sellbird/blob/b212385259da92246a56311d790d936e75dd70dd/docs/codex.md)
 - [Catálogo y pipeline de señales](https://github.com/ethanplusai/sellbird/blob/b212385259da92246a56311d790d936e75dd70dd/docs/signals-and-pipeline.md)
+
+## Calificación y borradores
+
+El exportador de Nexus y el Writer de prueba usan las rúbricas en [Calificación comercial](skills/lead_qualification.md). Para obtener un CSV local y comprobar quién pasa el umbral sin generar borradores, desde esta subcarpeta:
+
+```bash
+venv/bin/python scripts/export_to_nexus_csv.py
+venv/bin/python scripts/write_qualified_drafts.py --dry-run
+```
+
+Para generar borradores con la clasificación obligatoria, usá `venv/bin/python scripts/write_qualified_drafts.py` con el entorno de Codex configurado como se indica arriba. Este comando ejecuta únicamente el Writer. El heartbeat original de Sellbird usa el puntaje de su Scout y queda fuera del flujo de borradores de TOPS. El Writer local exige envío pausado, cupo cero y revisión manual.
