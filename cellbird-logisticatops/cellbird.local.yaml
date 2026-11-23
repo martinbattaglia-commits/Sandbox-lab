@@ -1,0 +1,85 @@
+brain:
+  provider: codex
+
+persona:
+  name: Lic. Martín F. Battaglia
+  company: Logística TOPS (Verotín S.A.)
+  role: Presidente y CEO
+  email: sandbox@example.invalid
+  linkedin: ""
+  tone: Español rioplatense profesional, consultivo y breve. Usar trato formal o voseo corporativo coherente.
+
+product:
+  name: Logística tercerizada 3PL
+  description: Operador logístico familiar con más de 45 años en Buenos Aires. Cargas generales y operación para productos farmacéuticos y médicos regulados.
+  pricing: Cotización según volumen, rotación y requisitos operativos.
+  key_benefits:
+    - Flexibilidad de almacenamiento y trazabilidad digital.
+    - Desconsolidación de contenedores, preparación de pedidos y distribución hasta 60 km de Buenos Aires.
+    - Experiencia en operaciones reguladas y procesos bajo estándares ISO 9001 e ISO 14001.
+  objection_responses: {}
+  offer:
+    primary: Evaluar el encaje operativo de una solución 3PL.
+    goal: get_reply
+    booking_method: ask_preference
+    meeting_owner: Lic. Martín F. Battaglia
+
+icp:
+  industries:
+    - distribuidora importadora industrial mayorista
+    - distribuidora de insumos médicos
+    - farmacia
+    - fabricante industrial
+    - laboratorio farmacéutico
+  company_size: PyMEs y empresas medianas con necesidades recurrentes de almacenamiento o distribución.
+  titles:
+    - Gerencia de Supply Chain o Logística
+    - Gerencia de Operaciones
+    - Dirección Comercial
+    - Gerencia de Compras
+    - Dueño o socio
+  geography:
+    - Buenos Aires, Argentina
+  geo_coordinates:
+    "Buenos Aires, Argentina": "-34.6037,-58.3816,60"
+  hiring_signals:
+    - logística
+    - supply chain
+    - depósito
+
+channels:
+  email:
+    enabled: false
+    provider: smtp
+    max_daily_sends: 0
+    require_approval: true
+    send_to_risky: false
+    link_domains:
+      - logisticatops.com
+      - cargasgenerales.logisticatops.com
+      - regulados.logisticatops.com
+    send_window:
+      start: "09:00"
+      end: "17:00"
+      weekdays_only: true
+      recipient_timezone: false
+  linkedin:
+    enabled: false
+
+usage:
+  max_daily_claude_percent: 20
+  quiet_hours:
+    start: "17:00"
+    end: "09:00"
+    timezone: America/Argentina/Buenos_Aires
+
+compliance:
+  postal_address: Agustín Magaldi 1765, Buenos Aires, Argentina
+  opt_out_line: Si desea dejar de recibir estos correos, responda «baja» y eliminaremos su dirección de la lista.
+  do_not_contact:
+    - logisticatops.com
+  precleared:
+    enabled: false
+
+writer:
+  email_rules: skills/email_rules.md
