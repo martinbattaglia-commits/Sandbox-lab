@@ -72,6 +72,8 @@ def get_eligible(database, config, threshold):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="Cuenta elegibles sin ejecutar el Writer")
+    parser.add_argument("--min-score", type=int, choices=range(101), metavar="0–100",
+                        help="Eleva el umbral para esta ejecución sin cambiar la configuración")
     args = parser.parse_args()
     database = ROOT / "data/sellbird.db"
     try:
@@ -79,7 +81,7 @@ def main():
         email = config.channels.email
         if email.enabled or not email.require_approval or email.max_daily_sends != 0:
             raise ValueError("El Writer de prueba requiere correo deshabilitado, cupo cero y aprobación manual.")
-        threshold = max(60, email.min_write_score)
+        threshold = max(60, email.min_write_score, args.min_score or 0)
         eligible = get_eligible(database, config, threshold)
         print(f"Contactos elegibles para el Writer con umbral {threshold}: {len(eligible)}", flush=True)
         if eligible and not args.dry_run:
