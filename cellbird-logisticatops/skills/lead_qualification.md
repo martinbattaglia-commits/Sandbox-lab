@@ -1,5 +1,15 @@
 # Calificación comercial de Logística TOPS
 
+## Exclusión previa de competidores
+
+Aplicá la supresión por dominio (incluidos subdominios) o por identidad de marca antes de clasificar. La lista local incluye LESET, Simplifica Fulfillment, 3PL.com.ar, TASA Logística, Andreani, OCA, OCASA, Urbano, Cruz del Sur, Vía Cargo, Shipnow, ClicOH, Moova, DHL, FedEx, UPS, Kuehne+Nagel, DSV, DB Schenker, Geodis, CEVA y la propia Logística TOPS (Verotín). Usá el nombre del prospecto y sus dominios, evitando tomar una mención de un proveedor como identidad del prospecto.
+
+Marcá `DESCARTADO` con `fit_score = 0` si el negocio ofrece a terceros alguno de estos servicios como parte de su actividad principal: operador logístico, 3PL/4PL, fulfillment, cross-docking, almacenamiento para terceros, depósito fiscal, transporte de cargas, fletes, correo privado, paquetería, última milla o freight forwarding. Buscá evidencia en la oferta comercial o en la categoría del negocio.
+
+**Regla anti-falso positivo.** Conservá importadores, distribuidores mayoristas y fabricantes que mencionen «envíos» o «logística» únicamente para entregar su propia mercadería. Aplicá el mismo criterio cuando indiquen qué correo usan, tengan logística interna o contraten un operador para entregar sus pedidos.
+
+## Clasificación comercial
+
 Clasificá cada empresa antes de puntuar. Elegí una sola línea.
 
 - **ANMAT** cuando haya evidencia de actividad sanitaria o regulada, como laboratorios, medicamentos, dispositivos médicos o insumos hospitalarios. Esta línea tiene prioridad si la empresa también opera con cargas generales.

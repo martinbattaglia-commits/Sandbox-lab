@@ -3,8 +3,12 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import math
+from pathlib import Path
 import re
 import unicodedata
+from urllib.parse import urlsplit
+
+import yaml
 
 from sellbird.fit import current_roles
 from sellbird.gate import do_not_contact_match
@@ -14,6 +18,29 @@ from sellbird.state import StateManager
 ANMAT = "ANMAT"
 GENERAL = "CARGAS_GENERALES"
 DISCARDED = "DESCARTADO"
+CONFIG_PATH = Path(__file__).resolve().parents[1] / "cellbird.local.yaml"
+LOGISTICS_SERVICE = (
+    r"operador(?:es)? logistic[oa]s?|[34]pl|fulfil{1,2}ment|cross[ -]?docking|"
+    r"(?:almacenamiento|almacenaje|deposito) para terceros|depositos? fiscal(?:es)?|"
+    r"transportes? (?:de )?cargas?|fletes?|correos? privados?|"
+    r"paqueteria|ultima milla|freight forward(?:ing|ers?)"
+)
+SERVICE_PROVIDER = (
+    r"somos|especializad[oa]s? en|nos dedicamos a|ofrecemos|brindamos|prestamos|"
+    r"proveemos|empresa de|servicios? (?:de |incluyen )|negocio principal (?:es|incluye)|"
+    r"oferta (?:principal )?(?:es|incluye)"
+)
+OWN_MERCHANDISE = (
+    r"(?:nuestr[oa]s?|sus?) (?:propia[s]? )?(?:mercaderia|productos?|pedidos?|ventas?)|"
+    r"mercaderia propia|productos? propios?|(?:en|con) (?:cada|tus|sus) compras?|"
+    r"entrega de (?:la |su )?compra|contratamos|tercerizamos|trabajamos con|usamos|"
+    r"(?:via|a traves de|mediante) (?:un |una )?"
+    r"(?:operador|correo|transportista|[34]pl|fulfil{1,2}ment)"
+)
+EXTERNAL_CUSTOMERS = r"para terceros|para empresas|para tiendas|para comercios|para tu negocio|para e[- ]?commerce"
+# Strip wrappers used in business listings, then match the whole brand.
+BRAND_PREFIX = r"^(?:(?:grupo|transportes?|correo|operador logistico) )+"
+BRAND_SUFFIX = r"(?: (?:s a u|s r l|s a|sau|srl|sa|argentina|group|grupo))+$"
 
 # Agustín Magaldi 1765 and Pedro de Luján 3159, respectively.
 SITES = ((-34.655221, -58.392065), (-34.656943, -58.3911209))
@@ -59,6 +86,66 @@ def contains(pattern, text):
     return re.search(rf"\b(?:{pattern})\b", text) is not None
 
 
+def brand_key(name):
+    words = " ".join(re.findall(r"[a-z0-9]+", normalize(name)))
+    words = re.sub(BRAND_PREFIX, "", words)
+    words = re.sub(BRAND_SUFFIX, "", words)
+    return words.replace(" ", "")
+
+
+def load_brand_keys():
+    with CONFIG_PATH.open(encoding="utf-8") as stream:
+        brands = yaml.safe_load(stream)["qualification"]["excluded_brands"]
+    if not isinstance(brands, list) or not brands or any(
+        not isinstance(brand, str) or not brand_key(brand) for brand in brands
+    ):
+        raise ValueError("qualification.excluded_brands debe ser una lista de marcas.")
+    return {brand_key(brand) for brand in brands}
+
+
+def offers_logistics(company):
+    category = normalize(company.get("industry")).strip()
+    # Keep clauses separate so a vendor mention elsewhere does not turn the
+    # company's merchandise shipping into a third-party service offering.
+    description = normalize(company.get("description"))
+    contrary_evidence = False
+    for clause in re.split(r"[.!?;\n]+", description):
+        own = contains(OWN_MERCHANDISE, clause)
+        contrary_evidence |= own
+        if not contains(LOGISTICS_SERVICE, clause):
+            continue
+        if contains(r"no (?:ofrecemos|prestamos|brindamos|somos|realizamos)", clause):
+            contrary_evidence = True
+            continue
+        external = contains(EXTERNAL_CUSTOMERS, clause)
+        service_label = re.fullmatch(
+            rf"\s*(?:{LOGISTICS_SERVICE})(?: (?:integral(?:es)?|nacional(?:es)?|internacional(?:es)?))*\s*",
+            clause,
+        )
+        if not own and (external or contains(SERVICE_PROVIDER, clause) or service_label):
+            return True
+    return not contrary_evidence and re.fullmatch(LOGISTICS_SERVICE, category) is not None
+
+
+def company_exclusion(company, exclusions, brands):
+    domain = company["domain"] or ""
+    website = company["website"] or ""
+    try:
+        host = urlsplit(website if "://" in website else f"//{website}").hostname
+    except ValueError:
+        host = None
+    for address in (domain, host):
+        if address and do_not_contact_match(f"x@{address}", exclusions):
+            return "Empresa excluida por supresión de dominio"
+    name = company["name"] or ""
+    identity = name.split("(", 1)[0]
+    if brand_key(name) in brands or brand_key(identity) in brands:
+        return "Empresa excluida por marca competidora"
+    if offers_logistics(company):
+        return "Ofrece servicios logísticos a terceros"
+    return ""
+
+
 def proximity(location):
     coords = COORDINATES.fullmatch(location or "")
     if coords:
@@ -82,9 +169,11 @@ class Qualification:
     reasons: tuple[str, ...]
 
 
-def qualify(company, contacts, signals, observations, blocked=False):
-    if blocked:
-        return Qualification(DISCARDED, 0, ("Empresa excluida por supresión",))
+def qualify(company, contacts, signals, observations, exclusion=None):
+    if exclusion is None and offers_logistics(company):
+        exclusion = "Ofrece servicios logísticos a terceros"
+    if exclusion:
+        return Qualification(DISCARDED, 0, (exclusion,))
 
     sector = normalize(" ".join(company[key] or "" for key in ("name", "industry")))
     # A discovery category can be the search phrase itself. Use it for routing,
@@ -148,6 +237,7 @@ def qualified_companies(db, config):
     prospects = rows_by_company(db, "SELECT * FROM prospects ORDER BY score DESC, created_at, id")
     observations = rows_by_company(db, "SELECT * FROM observations WHERE signal_code = 'HIRING_ROLE'")
     signals = rows_by_company(db, StateManager._CURRENT_CTE + "SELECT * FROM positive")
+    brands = load_brand_keys()
     exclusions = list(config.compliance.do_not_contact)
     exclusions.extend(row["value"] for row in db.execute(
         "SELECT value FROM suppressions WHERE kind IN ('domain', 'address')"
@@ -156,12 +246,12 @@ def qualified_companies(db, config):
     for record in db.execute("SELECT * FROM companies ORDER BY name COLLATE NOCASE, id"):
         company = dict(record)
         company_id = company["id"]
-        blocked = do_not_contact_match(f"x@{company['domain']}", exclusions)
+        exclusion = company_exclusion(company, exclusions, brands)
         contacts = [
             contact for contact in prospects[company_id]
-            if not blocked and contact["status"] != "opted_out"
+            if not exclusion and contact["status"] != "opted_out"
             and not do_not_contact_match(contact["email"] or "", exclusions)
         ]
         active_signals = signals[company_id]
-        rating = qualify(company, contacts, active_signals, observations[company_id], bool(blocked))
+        rating = qualify(company, contacts, active_signals, observations[company_id], exclusion)
         yield company, contacts, active_signals, rating

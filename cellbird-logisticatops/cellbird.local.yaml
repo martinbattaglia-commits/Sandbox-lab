@@ -79,8 +79,57 @@ compliance:
   opt_out_line: Si desea dejar de recibir estos correos, responda «baja» y eliminaremos su dirección de la lista.
   do_not_contact:
     - logisticatops.com
+    - leset.com.ar
+    - simplificafulfillment.com.ar
+    - 3pl.com.ar
+    - tasalogistica.com
+    - andreani.com
+    - oca.com.ar
+    - ocasa.com
+    - urbano.com.ar
+    - cruzdelsur.com
+    - viacargo.com.ar
+    - shipnow.com.ar
+    - clicoh.com
+    - moova.io
+    - dhl.com
+    - fedex.com
+    - ups.com
+    - kuehne-nagel.com
+    - dsv.com
+    - dbschenker.com
+    - geodis.com
+    - cevalogistics.com
   precleared:
     enabled: false
 
 writer:
   email_rules: skills/email_rules.md
+
+# Supresiones por identidad para la calificación local de TOPS.
+qualification:
+  excluded_brands:
+    - LESET
+    - Simplifica Fulfillment
+    - 3PL.com.ar
+    - 3PL
+    - TASA Logística
+    - Andreani
+    - OCA
+    - OCASA
+    - Urbano
+    - Cruz del Sur
+    - Vía Cargo
+    - Shipnow
+    - ClicOH
+    - Moova
+    - DHL
+    - FedEx
+    - UPS
+    - Kuehne+Nagel
+    - DSV
+    - DB Schenker
+    - Geodis
+    - CEVA
+    - Logística TOPS
+    - Verotín

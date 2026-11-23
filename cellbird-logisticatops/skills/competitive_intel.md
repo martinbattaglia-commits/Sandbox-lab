@@ -8,3 +8,5 @@ Comparar cada caso con operación propia, un 3PL generalista, un operador especi
 - Red de proveedores. Preguntar dónde se pierde visibilidad al pasar del depósito al transporte.
 
 Usá atributos de TOPS que apliquen al caso. Toda comparación con una empresa específica exige evidencia fechada y una revisión humana.
+
+Antes de considerar un prospecto, aplicá las [exclusiones de calificación](lead_qualification.md). Los operadores que venden logística a terceros se descartan. Los comercios e industrias que solo distribuyen su propia mercadería pueden calificar.
