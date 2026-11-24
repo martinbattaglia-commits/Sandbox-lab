@@ -4,34 +4,24 @@ Entorno de prueba de Verotín S.A. en `Sandbox-lab/cellbird-logisticatops/`. El 
 
 ## Instalación en una VM nueva
 
-Desde esta subcarpeta, si todavía no existen `upstream/` y `venv/`:
+Desde la raíz del checkout de `Sandbox-lab`, usá estos comandos como configuración del entorno de Codex Cloud:
 
 ```bash
-git clone https://github.com/ethanplusai/sellbird.git upstream
-git -C upstream checkout --detach b212385259da92246a56311d790d936e75dd70dd
-mkdir -p .runtime/tmp
-mv upstream/.git .runtime/upstream-git
-python3 -m venv venv
-source venv/bin/activate
-python -m pip install ./upstream
-npm_config_cache="$PWD/.runtime/npm-cache" npm install --prefix "$PWD/.runtime/codex-cli" --no-audit --no-fund @openai/codex@0.159.3
+cd cellbird-logisticatops
+bash scripts/setup_codex_vm.sh
 ```
 
-En cada sesión, desde esta subcarpeta:
+El instalador usa Python 3.11 o superior, Git y npm. Instala Sellbird en `.venv` desde el commit fijado y Codex CLI 0.159.3 en `.runtime/`. Deja pausado el envío y confirma las señales gratuitas. Al abrir una terminal nueva, desde esta subcarpeta:
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 export SELLBIRD_HOME="$PWD"
 export PATH="$PWD/.runtime/codex-cli/node_modules/.bin:$PATH"
 export TMPDIR="$PWD/.runtime/tmp"
-mkdir -p "$TMPDIR"
-test -L sellbird.local.yaml || ln -s cellbird.local.yaml sellbird.local.yaml
-sellbird sending pause
-sellbird signals --confirm free
-sellbird inboxes list
-sellbird outbox
 sellbird status --check
 ```
+
+Si Sellbird informa que venció la sesión de ChatGPT, ejecutá `"$PWD/.runtime/codex-cli/node_modules/.bin/codex" login` y elegí iniciar sesión con ChatGPT. Volvé a verificar con `sellbird status --check`.
 
 Sellbird lee `sellbird.local.yaml`. El enlace local apunta a `cellbird.local.yaml`, que es el archivo versionado. La app instala sus plantillas base en el directorio de trabajo cuando faltan. Se versionan las fichas y el prompt personalizados. Usá un directorio de trabajo desechable dentro de `.runtime/` para cada ejecución futura de `sellbird train <url> 3 --provider codex`. El comando acepta una URL por vez y puede reemplazar campos aprendidos y el archivo de configuración local. Revisá y trasladá los resultados de forma selectiva.
 
@@ -80,15 +70,15 @@ Antes de una prueba real de Codex, renovar la sesión de ChatGPT con la CLI y ve
 El exportador de Nexus y el Writer de prueba usan las rúbricas en [Calificación comercial](skills/lead_qualification.md). Para obtener un CSV local y comprobar quién pasa el umbral sin generar borradores, desde esta subcarpeta:
 
 ```bash
-venv/bin/python scripts/export_to_nexus_csv.py
-venv/bin/python scripts/write_qualified_drafts.py --dry-run
+.venv/bin/python scripts/export_to_nexus_csv.py
+.venv/bin/python scripts/write_qualified_drafts.py --dry-run
 ```
 
-Para generar borradores con la clasificación obligatoria, usá `venv/bin/python scripts/write_qualified_drafts.py` con el entorno de Codex configurado como se indica arriba. Este comando ejecuta únicamente el Writer. El heartbeat original de Sellbird usa el puntaje de su Scout y queda fuera del flujo de borradores de TOPS. El Writer local exige envío pausado, cupo cero y revisión manual.
+Para generar borradores con la clasificación obligatoria, usá `.venv/bin/python scripts/write_qualified_drafts.py` con el entorno de Codex configurado como se indica arriba. Este comando ejecuta únicamente el Writer. El heartbeat original de Sellbird usa el puntaje de su Scout y queda fuera del flujo de borradores de TOPS. El Writer local exige envío pausado, cupo cero y revisión manual.
 
 ## Carriles de importación en Nexus OS
 
-Ejecutá `venv/bin/python scripts/export_to_nexus_csv.py` para generar los dos CSV en `out/`. El exportador lee SQLite en modo solo lectura y recalcula el encaje según las rúbricas de TOPS.
+Ejecutá `.venv/bin/python scripts/export_to_nexus_csv.py` para generar los dos CSV en `out/`. El exportador lee SQLite en modo solo lectura y recalcula el encaje según las rúbricas de TOPS.
 
 - **Marketing.** Una fila por contacto verificado en empresas con puntaje de 60 a 79. Aplicá la etiqueta `cold_outreach_sellbird` al importar este archivo en Nexus. Los contactos sin verificar de este rango quedan para enriquecimiento en Sellbird.
 - **CRM.** Una fila por empresa con puntaje de 80 a 100, incluso cuando todavía no hay contacto. Se prioriza al decisor identificado y, entre contactos equivalentes, al verificado. Se toma su primer borrador vigente pendiente de revisión o se incluye una plantilla base de la línea. Usá `listo_para_propuesta` para distinguir las filas con decisor y señal activa de contratación, financiación o pauta. `precio_desde_usd_m2` indica el precio base.
@@ -97,6 +87,20 @@ El exportador prepara archivos para revisión e importación. El alta en Nexus y
 
 ## Importación de empresas semilla
 
-Prepará `data/semillas_b2b.csv` con las columnas de [la plantilla de ejemplo](data/semillas_b2b.example.csv). Para excluir clientes activos, usá `data/clientes_activos_exclusion.csv` con una columna `domain` o `website`. Revisá los conteos con `venv/bin/python scripts/import_seed_companies.py --dry-run`. Quitá `--dry-run` para insertar en la base local. Los CSV operativos y SQLite están ignorados por Git.
+Prepará `data/semillas_b2b.csv` con las columnas de [la plantilla de ejemplo](data/semillas_b2b.example.csv). Para excluir clientes activos, usá `data/clientes_activos_exclusion.csv` con una columna `domain` o `website`. Revisá los conteos con `.venv/bin/python scripts/import_seed_companies.py --dry-run`. Quitá `--dry-run` para insertar en la base local. Los CSV operativos y SQLite están ignorados por Git.
 
 La importación registra empresas y su origen. El perfilado, la identificación del decisor y el puntaje se completan después con evidencia comercial.
+
+
+## Lote público de AMBA
+
+`data/seeds_amba_demo.csv` contiene cinco empresas con sitio institucional público. Las ubicaciones y los rubros son pistas iniciales, no una señal de intención comercial. Para replicar la prueba sin Overpass ni servicios pagos, después de activar el entorno:
+
+```bash
+python scripts/import_seed_companies.py --seed data/seeds_amba_demo.csv
+sellbird profile --limit 5
+python scripts/export_to_nexus_csv.py
+python scripts/export_to_nexus_csv.py --out out/amba-demo/ranking_tops.csv
+```
+
+El importador deduplica por dominio y los resultados en `out/` quedan ignorados. Si Codex figura listo y hay un contacto elegible, el Writer de TOPS permite aplicar el corte de prioridad con `python scripts/write_qualified_drafts.py --min-score 80`. Conservá el modo pausado y la revisión manual.
